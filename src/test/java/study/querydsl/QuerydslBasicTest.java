@@ -5,6 +5,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
@@ -430,6 +431,25 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    public void orderByWithCase() {
+        NumberExpression<Integer> rankPath = new CaseBuilder()
+                .when(member.age.between(0, 20)).then(2)
+                .when(member.age.between(21, 30)).then(1)
+                .otherwise(3);
+        List<Tuple> result = queryFactory
+                .select(member.username, member.age, rankPath)
+                .from(member)
+                .orderBy(rankPath.desc())
+                .fetch();
+        for (Tuple tuple : result) {
+            String username = tuple.get(member.username);
+            Integer age = tuple.get(member.age);
+            Integer rank = tuple.get(rankPath);
+            System.out.println("username = " + username + " age = " + age + " rank = "
+                    + rank);
+        }
+    }
+    @Test
     public void constant() {
         List<Tuple> result = queryFactory
                 .select(member.username, Expressions.constant("A"))
@@ -452,4 +472,7 @@ public class QuerydslBasicTest {
             System.out.println("s = " + s);
         }
     }
+
+
 }
+
